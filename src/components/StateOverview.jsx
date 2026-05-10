@@ -1,6 +1,6 @@
 import { fmt, topN } from '../utils/helpers'
 
-export default function StateOverview({ state, records, color }) {
+export default function StateOverview({ state, records, color, t }) {
   if (!records?.length) return null
   const top5 = topN(records, 'modal_price', 5)
   const avgModal = Math.round(records.reduce((s, r) => s + Number(r.modal_price), 0) / records.length)
@@ -16,9 +16,9 @@ export default function StateOverview({ state, records, color }) {
       <div className="flex items-center justify-between mb-3">
         <h3 className={`font-bold text-base ${textColor}`}>{state}</h3>
         <div className="flex gap-3 text-xs text-gray-500 dark:text-gray-400">
-          <span>{records.length} records</span>
-          <span>{districts} districts</span>
-          <span>Avg: {fmt(avgModal)}</span>
+          <span>{records.length} {t.records}</span>
+          <span>{districts} {t.districts}</span>
+          <span>{t.avg || 'Avg'}: {fmt(avgModal)}</span>
         </div>
       </div>
       <div className="space-y-2">

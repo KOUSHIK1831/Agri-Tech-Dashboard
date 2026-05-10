@@ -7,10 +7,10 @@ const trendConfig = {
   stable: { icon: Minus, color: 'text-yellow-500', bg: 'bg-yellow-50 dark:bg-yellow-900/30', label: '→' },
 }
 
-export default function PriceCard({ record }) {
+export default function PriceCard({ record, t: tr }) {
   const { state, district, market, commodity, variety, min_price, max_price, modal_price, arrival_date } = record
-  const t = trendConfig[trend(min_price, max_price, modal_price)]
-  const Icon = t.icon
+  const tc = trendConfig[trend(min_price, max_price, modal_price)]
+  const Icon = tc.icon
 
   return (
     <div className="card p-4 hover:shadow-lg transition-shadow duration-200 animate-fade-in">
@@ -19,22 +19,22 @@ export default function PriceCard({ record }) {
           <h3 className="font-bold text-base text-gray-900 dark:text-white truncate">{commodity}</h3>
           {variety && <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{variety}</p>}
         </div>
-        <span className={`badge ${t.bg} ${t.color} ml-2 shrink-0`}>
-          <Icon className="w-3 h-3" /> {t.label}
+        <span className={`badge ${tc.bg} ${tc.color} ml-2 shrink-0`}>
+          <Icon className="w-3 h-3" /> {tc.label}
         </span>
       </div>
 
       <div className="grid grid-cols-3 gap-2 mb-3">
         <div className="text-center p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
-          <p className="text-xs text-gray-500 dark:text-gray-400">Min</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{tr.minPrice}</p>
           <p className="font-bold text-sm text-red-600 dark:text-red-400">{fmt(min_price)}</p>
         </div>
         <div className="text-center p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
-          <p className="text-xs text-gray-500 dark:text-gray-400">Modal</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{tr.modalPrice}</p>
           <p className="font-bold text-sm text-green-600 dark:text-green-400">{fmt(modal_price)}</p>
         </div>
         <div className="text-center p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <p className="text-xs text-gray-500 dark:text-gray-400">Max</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{tr.maxPrice}</p>
           <p className="font-bold text-sm text-blue-600 dark:text-blue-400">{fmt(max_price)}</p>
         </div>
       </div>
