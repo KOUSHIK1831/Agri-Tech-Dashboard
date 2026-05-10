@@ -2,21 +2,20 @@ import { useState } from 'react'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import { fmt } from '../utils/helpers'
 
-const COLS = [
-  { key: 'commodity', label: 'Commodity' },
-  { key: 'variety', label: 'Variety' },
-  { key: 'market', label: 'Market' },
-  { key: 'district', label: 'District' },
-  { key: 'state', label: 'State' },
-  { key: 'min_price', label: 'Min ₹', num: true },
-  { key: 'modal_price', label: 'Modal ₹', num: true },
-  { key: 'max_price', label: 'Max ₹', num: true },
-  { key: 'arrival_date', label: 'Date' },
-]
-
 const PAGE_SIZE = 15
 
-export default function MarketTable({ data }) {
+export default function MarketTable({ data, t }) {
+  const COLS = [
+    { key: 'commodity', label: t.commodity || 'Commodity' },
+    { key: 'variety', label: t.variety || 'Variety' },
+    { key: 'market', label: t.market || 'Market' },
+    { key: 'district', label: t.district || 'District' },
+    { key: 'state', label: t.state || 'State' },
+    { key: 'min_price', label: `${t.minPrice || 'Min'} ₹`, num: true },
+    { key: 'modal_price', label: `${t.modalPrice || 'Modal'} ₹`, num: true },
+    { key: 'max_price', label: `${t.maxPrice || 'Max'} ₹`, num: true },
+    { key: 'arrival_date', label: t.arrivalDate || 'Date' },
+  ]
   const [sort, setSort] = useState({ key: 'modal_price', dir: 'desc' })
   const [page, setPage] = useState(1)
 
@@ -71,15 +70,15 @@ export default function MarketTable({ data }) {
       </div>
       {pages > 1 && (
         <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 dark:border-gray-700">
-          <span className="text-xs text-gray-500">{data.length} records · Page {page}/{pages}</span>
+          <span className="text-xs text-gray-500">{sorted.length} {t.records || 'records'} · Page {page}/{pages}</span>
           <div className="flex gap-2">
             <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
               className="px-3 py-1 rounded-lg text-sm border border-gray-200 dark:border-gray-600 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700">
-              ← Prev
+              {t.previousPage || '← Prev'}
             </button>
             <button onClick={() => setPage(p => Math.min(pages, p + 1))} disabled={page === pages}
               className="px-3 py-1 rounded-lg text-sm border border-gray-200 dark:border-gray-600 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700">
-              Next →
+              {t.nextPage || 'Next →'}
             </button>
           </div>
         </div>

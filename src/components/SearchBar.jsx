@@ -23,7 +23,7 @@ export default function SearchBar({
   suggestions, recentSearches, showDropdown, setShowDropdown,
   selectSuggestion, selectRecent,
   clearSearch, retry, clearRecent, removeRecent,
-  inputRef, placeholder,
+  inputRef, placeholder, lang, t,
 }) {
   const [focusedIndex, setFocusedIndex] = useState(-1)
   const [listening, setListening] = useState(false)
@@ -31,12 +31,11 @@ export default function SearchBar({
   const recognitionRef = useRef(null)
 
   const combined = useMemo(() => [
-    ...(recentSearches.length > 0 && !query ? [{ type: 'header', text: 'Recent Searches' }] : []),
-    ...(query ? [] : recentSearches.map(t => ({ type: 'recent', text: t }))),
-    ...(query && recentSearches.length > 0 && recentSearches.includes(query) ? [] : []),
-    ...(suggestions.length > 0 ? [{ type: 'header', text: 'Suggestions' }] : []),
-    ...suggestions.map(s => ({ type: 'suggestion', ...s })),
-  ], [recentSearches, query, suggestions])
+    ...(recentSearches.length > 0 && !query ? [{ type: 'header', text: t?.recentSearches || 'Recent Searches' }] : []),
+    ...(query ? [] : recentSearches.map(item => ({ type: 'recent', text: item }))),
+    ...(suggestions.length > 0 ? [{ type: 'header', text: t?.suggestions || 'Suggestions' }] : []),
+    ...suggestions.map(s => ({ kind: 'suggestion', ...s })),
+  ], [recentSearches, query, suggestions, t])
 
   useEffect(() => {
     const handleClick = (e) => {
@@ -69,9 +68,9 @@ export default function SearchBar({
         e.preventDefault()
         if (focusedIndex >= 0) {
           const item = combined[focusedIndex]
-          if (item.type === 'header') return
-          if (item.type === 'recent') selectRecent(item.text)
-          else if (item.type === 'suggestion') selectSuggestion(item.text)
+            if (item.type === 'header') return
+            if (item.type === 'recent') selectRecent(item.text)
+            else if (item.kind === 'suggestion') selectSuggestion(item.text)
         } else if (query.trim()) {
           setShowDropdown(false)
         }
@@ -96,7 +95,7 @@ export default function SearchBar({
     }
 
     const recog = new SpeechRecognition()
-    recog.lang = 'te-IN'
+    recog.lang = lang === 'hi' ? 'hi-IN' : lang === 'te' ? 'te-IN' : 'en-IN'
     recog.continuous = false
     recog.interimResults = false
 
@@ -111,7 +110,7 @@ export default function SearchBar({
 
     recognitionRef.current = recog
     recog.start()
-  }, [listening, setQuery])
+  }, [listening, setQuery, lang])
 
   return (
     <div className="relative flex-1 min-w-0" ref={dropdownRef}>
@@ -139,14 +138,14 @@ export default function SearchBar({
         />
         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
           {error && (
-            <button onClick={retry} title="Retry" className="p-1.5 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all">
+            <button onClick={retry} title={t?.retryTooltip || 'Retry'} className="p-1.5 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all">
               <Loader2 className="w-3.5 h-3.5" />
             </button>
           )}
           {typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition) && (
             <button
               onClick={startVoice}
-              title={listening ? 'Stop listening' : 'Voice search'}
+              title={listening ? (t?.stopListeningTooltip || 'Stop listening') : (t?.voiceSearchTooltip || 'Voice search')}
               className={`p-1.5 rounded-lg transition-all ${
                 listening
                   ? 'text-red-500 bg-red-50 dark:bg-red-900/20 animate-pulse'
@@ -157,7 +156,7 @@ export default function SearchBar({
             </button>
           )}
           {query && (
-            <button onClick={clearSearch} title="Clear" className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all">
+            <button onClick={clearSearch} title={t?.clearTooltip || 'Clear'} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all">
               <X className="w-3.5 h-3.5" />
             </button>
           )}
@@ -172,8 +171,8 @@ export default function SearchBar({
               return (
                 <div key={i} className="flex items-center justify-between px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50">
                   <span>{item.text}</span>
-                  {item.text === 'Recent Searches' && recentSearches.length > 0 && (
-                    <button onClick={clearRecent} className="text-red-400 hover:text-red-500">Clear</button>
+                  {item.text === (t?.recentSearches || 'Recent Searches') && recentSearches.length > 0 && (
+                    <button onClick={clearRecent} className="text-red-400 hover:text-red-500">{t?.clearTooltip || 'Clear'}</button>
                   )}
                 </div>
               )
@@ -201,7 +200,7 @@ export default function SearchBar({
                 </button>
               )
             }
-            if (item.type === 'suggestion') {
+            if (item.kind === 'suggestion') {
               const Icon = TYPE_ICONS[item.type] || Search
               const color = TYPE_COLORS[item.type] || 'text-gray-500'
               return (
