@@ -65,4 +65,9 @@ export const en = {
   languageEn: 'English',
   languageTe: 'తెలుగు',
   languageHi: 'हिन्दी',
+  botName: 'Kisan Sahayak',
+  botGreeting: 'Namaste! I am Kisan Sahayak. How can I help you with market prices today?',
+  botPlaceholder: 'Ask about prices, markets...',
+  botPower: 'Powered by Groq/Gemini AI · Data based on current view',
+  clickToSpeak: 'Click to Speak',
 }
