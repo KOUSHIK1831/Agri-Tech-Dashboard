@@ -9,7 +9,7 @@ const trendConfig = {
 
 export default function PriceCard({ record }) {
   const { state, district, market, commodity, variety, min_price, max_price, modal_price, arrival_date } = record
-  const t = trendConfig[trend(min_price, max_price)]
+  const t = trendConfig[trend(min_price, max_price, modal_price)]
   const Icon = t.icon
 
   return (

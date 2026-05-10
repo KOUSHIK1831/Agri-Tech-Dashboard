@@ -1,9 +1,9 @@
 export const fmt = (n) => `₹${Number(n).toLocaleString('en-IN')}`
 
-export const trend = (min, max) => {
+export const trend = (min, max, modal) => {
   const mid = (Number(min) + Number(max)) / 2
-  const modal = Number(max)
-  return modal > mid ? 'up' : modal < mid ? 'down' : 'stable'
+  const m = Number(modal)
+  return m > mid ? 'up' : m < mid ? 'down' : 'stable'
 }
 
 export const uniqueValues = (arr, key) =>

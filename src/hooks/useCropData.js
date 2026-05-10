@@ -33,6 +33,7 @@ export function useCropData(filters) {
     }
     load()
     return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(filters), refreshKey])
 
   return { data, stateData, loading, error, total, refetch: () => setRefreshKey(k => k + 1) }

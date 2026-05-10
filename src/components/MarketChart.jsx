@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, Legend, RadarChart, Radar, PolarGrid, PolarAngleAxis,
+  LineChart, Line, Legend,
 } from 'recharts'
 import { topN, groupBy } from '../utils/helpers'
 
@@ -81,11 +81,11 @@ function MarketModalChart({ data }) {
   )
 }
 
-const TABS = ['Commodity Comparison', 'District-wise', 'Market Modal']
-
 export default function MarketChart({ data, t }) {
   const [tab, setTab] = useState(0)
   if (!data.length) return null
+
+  const TABS = [t.priceComparison, t.districtChart, t.marketChart]
 
   return (
     <div className="card p-4">
