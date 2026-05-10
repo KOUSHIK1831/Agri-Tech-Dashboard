@@ -1,9 +1,10 @@
-import { useState, useMemo, Suspense, lazy } from 'react'
+import { useState, useMemo } from 'react'
 import {
   Sun, Moon, RefreshCw, LayoutGrid, Table2, Sprout,
-  TrendingUp, TrendingDown, Award, AlertCircle, Wheat,
+  TrendingUp, TrendingDown, Award, AlertCircle, Wheat, Search as SearchIcon,
 } from 'lucide-react'
 import { useCropData } from './hooks/useCropData'
+import { useSearch } from './hooks/useSearch'
 import { translations } from './i18n/translations'
 import { uniqueValues, topN, fmt } from './utils/helpers'
 import SearchBar from './components/SearchBar'
@@ -22,11 +23,11 @@ export default function App() {
   const [dark, setDark] = useState(false)
   const [lang, setLang] = useState('en')
   const [view, setView] = useState('card')
-  const [search, setSearch] = useState('')
   const [filters, setFilters] = useState({ state: '', district: '', commodity: '' })
 
   const t = translations[lang]
   const { data, stateData, loading, error, total, refetch } = useCropData(filters)
+  const search = useSearch()
 
   const allData = useMemo(() => {
     const combined = [...data]
@@ -38,16 +39,10 @@ export default function App() {
     return combined
   }, [data, stateData, filters.state])
 
-  const filtered = useMemo(() => {
-    if (!search) return allData
-    const q = search.toLowerCase()
-    return allData.filter(r =>
-      r.commodity?.toLowerCase().includes(q) ||
-      r.market?.toLowerCase().includes(q) ||
-      r.district?.toLowerCase().includes(q) ||
-      r.state?.toLowerCase().includes(q)
-    )
-  }, [allData, search])
+  const isSearchActive = search.results !== null
+  const activeData = isSearchActive ? search.results.records : allData
+  const activeLoading = search.loading || loading
+  const activeError = search.error || error
 
   const states = useMemo(() => uniqueValues(allData, 'state'), [allData])
   const districts = useMemo(() => {
@@ -56,9 +51,9 @@ export default function App() {
   }, [allData, filters.state])
   const commodities = useMemo(() => uniqueValues(allData, 'commodity'), [allData])
 
-  const highest = useMemo(() => topN(filtered, 'modal_price', 1)[0], [filtered])
-  const lowest = useMemo(() => [...filtered].sort((a, b) => Number(a.modal_price) - Number(b.modal_price))[0], [filtered])
-  const topCommodities = useMemo(() => topN(filtered, 'modal_price', 3), [filtered])
+  const highest = useMemo(() => topN(activeData, 'modal_price', 1)[0], [activeData])
+  const lowest = useMemo(() => [...activeData].sort((a, b) => Number(a.modal_price) - Number(b.modal_price))[0], [activeData])
+  const topCommodities = useMemo(() => topN(activeData, 'modal_price', 3), [activeData])
 
   return (
     <div className={dark ? 'dark' : ''}>
@@ -96,7 +91,24 @@ export default function App() {
         {/* Sticky Filter Bar */}
         <div className="sticky top-[60px] z-40 bg-white/90 dark:bg-gray-900/90 backdrop-blur border-b border-gray-200 dark:border-gray-700 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap gap-3 items-end">
-            <SearchBar value={search} onChange={setSearch} placeholder={t.search} />
+            <SearchBar
+              query={search.query}
+              setQuery={search.setQuery}
+              loading={search.loading}
+              error={search.error}
+              suggestions={search.suggestions}
+              recentSearches={search.recentSearches}
+              showDropdown={search.showDropdown}
+              setShowDropdown={search.setShowDropdown}
+              selectSuggestion={search.selectSuggestion}
+              selectRecent={search.selectRecent}
+              clearSearch={search.clearSearch}
+              retry={search.retry}
+              clearRecent={search.clearRecent}
+              removeRecent={search.removeRecent}
+              inputRef={search.inputRef}
+              placeholder={t.search}
+            />
             <FilterPanel filters={filters} setFilters={setFilters} states={states} districts={districts} commodities={commodities} t={t} />
             <div className="flex gap-1 ml-auto">
               <button onClick={() => setView('card')} className={`p-2 rounded-lg transition-all ${view === 'card' ? 'bg-green-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
@@ -112,15 +124,15 @@ export default function App() {
         <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
 
           {/* Error */}
-          {error && (
+          {activeError && (
             <div className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl text-red-700 dark:text-red-300">
               <AlertCircle className="w-5 h-5 shrink-0" />
-              <span className="flex-1 text-sm">{t.error}</span>
-              <button onClick={refetch} className="btn-primary bg-red-600 hover:bg-red-700 text-sm px-3 py-1.5">{t.retry}</button>
+              <span className="flex-1 text-sm">{activeError}</span>
+              <button onClick={isSearchActive ? search.retry : refetch} className="btn-primary bg-red-600 hover:bg-red-700 text-sm px-3 py-1.5">{t.retry}</button>
             </div>
           )}
 
-          {loading ? <LoadingSkeleton /> : (
+          {activeLoading ? <LoadingSkeleton /> : (
             <>
               {/* Summary Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -134,7 +146,7 @@ export default function App() {
                   value={topCommodities[0]?.commodity || '—'}
                   sub={topCommodities.slice(1).map(c => c.commodity).join(', ')} />
                 <StatCard icon={Sprout} label="Total Records" color="purple"
-                  value={filtered.length.toLocaleString()}
+                  value={activeData.length.toLocaleString()}
                   sub={`${states.length} states · ${districts.length} districts`} />
               </div>
 
@@ -145,28 +157,40 @@ export default function App() {
               </div>
 
               {/* Charts */}
-              {filtered.length > 0 && <MarketChart data={filtered} t={t} />}
+              {activeData.length > 0 && <MarketChart data={activeData} t={t} />}
 
               {/* Data Section */}
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="font-bold text-gray-800 dark:text-white text-base">
-                    {filtered.length} {t.records}
-                    {search && <span className="text-sm font-normal text-gray-500 ml-2">for "{search}"</span>}
+                    {activeData.length} {t.records}
+                    {isSearchActive && (
+                      <span className="text-sm font-normal text-gray-500 ml-2">
+                        for "<span className="font-medium text-green-600 dark:text-green-400">{search.query}</span>"
+                        {search.results.filters.commodity && <span className="ml-1">· {search.results.filters.commodity}</span>}
+                        {search.results.filters.state && <span className="ml-1">· {search.results.filters.state}</span>}
+                        {search.results.filters.district && <span className="ml-1">· {search.results.filters.district}</span>}
+                      </span>
+                    )}
                   </h2>
                 </div>
 
-                {filtered.length === 0 ? (
+                {activeData.length === 0 && !activeLoading ? (
                   <div className="card p-12 text-center">
-                    <Sprout className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-                    <p className="text-gray-500 dark:text-gray-400 font-medium">{t.noData}</p>
+                    <SearchIcon className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                    <p className="text-gray-500 dark:text-gray-400 font-medium">
+                      {isSearchActive ? `No results found for "${search.query}"` : t.noData}
+                    </p>
+                    {isSearchActive && (
+                      <p className="text-xs text-gray-400 mt-1">Try different keywords like "tomato", "hyderabad", or "rice in telangana"</p>
+                    )}
                   </div>
                 ) : view === 'card' ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {filtered.slice(0, 60).map((r, i) => <PriceCard key={i} record={r} />)}
+                    {activeData.slice(0, 60).map((r, i) => <PriceCard key={i} record={r} />)}
                   </div>
                 ) : (
-                  <MarketTable data={filtered} />
+                  <MarketTable data={activeData} />
                 )}
               </div>
 
