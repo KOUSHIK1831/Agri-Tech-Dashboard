@@ -15,16 +15,18 @@ function Select({ label, value, onChange, options, allLabel }) {
     </div>
   )
 }
-
-export default function FilterPanel({ filters, setFilters, states, districts, commodities, t }) {
+export default function FilterPanel({ tempFilters, setTempFilters, onFetch, states, districts, commodities, t }) {
   return (
     <div className="flex flex-wrap gap-3 items-end">
       <div className="flex items-center gap-2 text-green-600 dark:text-green-400 font-semibold text-sm">
         <Filter className="w-4 h-4" /> {t.filters || 'Filters'}
       </div>
-      <Select label={t.state} value={filters.state} onChange={v => setFilters(f => ({ ...f, state: v, district: '' }))} options={states} allLabel={t.allStates} />
-      <Select label={t.district} value={filters.district} onChange={v => setFilters(f => ({ ...f, district: v }))} options={districts} allLabel={t.allDistricts} />
-      <Select label={t.commodity} value={filters.commodity} onChange={v => setFilters(f => ({ ...f, commodity: v }))} options={commodities} allLabel={t.allCommodities} />
+      <Select label={t.state} value={tempFilters.state} onChange={v => setTempFilters(f => ({ ...f, state: v, district: '', commodity: '' }))} options={states} allLabel={t.allStates} />
+      <Select label={t.district} value={tempFilters.district} onChange={v => setTempFilters(f => ({ ...f, district: v, commodity: '' }))} options={districts} allLabel={t.allDistricts} />
+      <Select label={t.commodity} value={tempFilters.commodity} onChange={v => setTempFilters(f => ({ ...f, commodity: v }))} options={commodities} allLabel={t.allCommodities} />
+      <div className="flex items-center gap-2 ml-2">
+        <button onClick={onFetch} className="btn-primary bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-xl text-sm">{t.fetch || 'Fetch'}</button>
+      </div>
     </div>
   )
 }
