@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
   Sun, Moon, RefreshCw, LayoutGrid, Table2, Sprout,
-  TrendingUp, TrendingDown, Award, AlertCircle, Wheat, Search as SearchIcon,
+  TrendingUp, TrendingDown, Award, AlertCircle, Wheat, Search as SearchIcon, Globe,
 } from 'lucide-react'
 import { useCropData } from './hooks/useCropData'
 import { useSearch } from './hooks/useSearch'
@@ -14,19 +14,27 @@ import MarketTable from './components/MarketTable'
 import MarketChart from './components/MarketChart'
 import StatCard from './components/StatCard'
 import StateOverview from './components/StateOverview'
-import FuturePlaceholder from './components/FuturePlaceholder'
 import LoadingSkeleton from './components/LoadingSkeleton'
 
 const DEFAULT_STATES = ['Telangana', 'Andhra Pradesh']
 
 export default function App() {
-  const [dark, setDark] = useState(false)
+  const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'))
   const [lang, setLang] = useState('en')
+  const [langOpen, setLangOpen] = useState(false)
   const [view, setView] = useState('card')
   const [filters, setFilters] = useState({ state: '', district: '', commodity: '' })
 
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', dark)
+  }, [dark])
+
+  useEffect(() => {
+    document.documentElement.lang = lang
+  }, [lang])
+
   const t = translations[lang]
-  const { data, stateData, loading, error, total, refetch } = useCropData(filters)
+  const { data, stateData, loading, error, refetch } = useCropData(filters)
   const search = useSearch()
 
   const allData = useMemo(() => {
@@ -56,8 +64,7 @@ export default function App() {
   const topCommodities = useMemo(() => topN(activeData, 'modal_price', 3), [activeData])
 
   return (
-    <div className={dark ? 'dark' : ''}>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
 
         {/* Header */}
         <header className="bg-gradient-to-r from-green-700 via-green-600 to-emerald-500 dark:from-green-900 dark:via-green-800 dark:to-emerald-700 sticky top-0 z-50 shadow-lg">
@@ -72,10 +79,22 @@ export default function App() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={() => setLang(l => l === 'en' ? 'te' : 'en')}
-                className="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-all">
-                {lang === 'en' ? 'తె' : 'EN'}
-              </button>
+              <div className="relative">
+                <button onClick={() => setLangOpen(o => !o)} onBlur={() => setTimeout(() => setLangOpen(false), 150)}
+                  className="bg-white/20 hover:bg-white/30 text-white p-2 rounded-lg transition-all">
+                  <Globe className="w-4 h-4" />
+                </button>
+                {langOpen && (
+                  <div className="absolute right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl shadow-lg overflow-hidden z-50 min-w-[120px]">
+                    {[['en', 'English'], ['te', 'తెలుగు'], ['hi', 'हिन्दी']].map(([val, label]) => (
+                      <button key={val} onMouseDown={() => { setLang(val); setLangOpen(false) }}
+                        className={`w-full text-left px-3 py-2 text-sm font-medium transition-colors ${lang === val ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button onClick={() => setDark(d => !d)}
                 className="bg-white/20 hover:bg-white/30 text-white p-2 rounded-lg transition-all">
                 {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -145,9 +164,9 @@ export default function App() {
                 <StatCard icon={Award} label={t.topCommodities} color="orange"
                   value={topCommodities[0]?.commodity || '—'}
                   sub={topCommodities.slice(1).map(c => c.commodity).join(', ')} />
-                <StatCard icon={Sprout} label="Total Records" color="purple"
+                <StatCard icon={Sprout} label={t.totalRecords || 'Total Records'} color="purple"
                   value={activeData.length.toLocaleString()}
-                  sub={`${states.length} states · ${districts.length} districts`} />
+                  sub={`${states.length} ${t.states || 'states'} · ${districts.length} ${t.districts || 'districts'}`} />
               </div>
 
               {/* State Overviews */}
@@ -194,11 +213,6 @@ export default function App() {
                 )}
               </div>
 
-              {/* Future Features */}
-              <div>
-                <h2 className="font-bold text-gray-800 dark:text-white text-base mb-3">🚀 Smart Farming Features</h2>
-                <FuturePlaceholder lang={lang} />
-              </div>
             </>
           )}
         </main>
@@ -207,6 +221,5 @@ export default function App() {
           Data sourced from Government of India Open Data Platform · api.data.gov.in
         </footer>
       </div>
-    </div>
-  )
-}
+    )
+  }

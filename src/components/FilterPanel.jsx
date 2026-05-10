@@ -20,7 +20,7 @@ export default function FilterPanel({ filters, setFilters, states, districts, co
   return (
     <div className="flex flex-wrap gap-3 items-end">
       <div className="flex items-center gap-2 text-green-600 dark:text-green-400 font-semibold text-sm">
-        <Filter className="w-4 h-4" /> Filters
+        <Filter className="w-4 h-4" /> {t.filters || 'Filters'}
       </div>
       <Select label={t.state} value={filters.state} onChange={v => setFilters(f => ({ ...f, state: v, district: '' }))} options={states} allLabel={t.allStates} />
       <Select label={t.district} value={filters.district} onChange={v => setFilters(f => ({ ...f, district: v }))} options={districts} allLabel={t.allDistricts} />

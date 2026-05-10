@@ -1,5 +1,4 @@
 import { fmt, topN } from '../utils/helpers'
-import { TrendingUp } from 'lucide-react'
 
 export default function StateOverview({ state, records, color }) {
   if (!records?.length) return null

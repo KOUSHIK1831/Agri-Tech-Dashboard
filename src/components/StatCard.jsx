@@ -1,5 +1,3 @@
-import { fmt } from '../utils/helpers'
-
 export default function StatCard({ icon: Icon, label, value, sub, color = 'green', onClick }) {
   const colors = {
     green: 'from-green-500 to-green-600',
