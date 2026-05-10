@@ -65,4 +65,9 @@ export const hi = {
   languageEn: 'English',
   languageTe: 'తెలుగు',
   languageHi: 'हिन्दी',
+  botName: 'किसान सहायक',
+  botGreeting: 'नमस्ते! मैं किसान सहायक हूँ। आज मैं बाजार भाव में आपकी क्या मदद कर सकता हूँ?',
+  botPlaceholder: 'भाव, बाजार के बारे में पूछें...',
+  botPower: 'जेमिनी AI द्वारा संचालित · वर्तमान डेटा पर आधारित',
+  clickToSpeak: 'बोलने के लिए क्लिक करें',
 }

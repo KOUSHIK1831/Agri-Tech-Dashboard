@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import {
-  Search, X, Loader2, Mic, MicOff, Clock, TrendingUp,
+  Search, X, Loader2, Clock, TrendingUp,
   MapPin, Building2, ChevronRight,
 } from 'lucide-react'
 
@@ -26,9 +26,7 @@ export default function SearchBar({
   inputRef, placeholder, lang, t,
 }) {
   const [focusedIndex, setFocusedIndex] = useState(-1)
-  const [listening, setListening] = useState(false)
   const dropdownRef = useRef(null)
-  const recognitionRef = useRef(null)
 
   const combined = useMemo(() => [
     ...(recentSearches.length > 0 && !query ? [{ type: 'header', text: t?.recentSearches || 'Recent Searches' }] : []),
@@ -81,37 +79,6 @@ export default function SearchBar({
     }
   }, [showDropdown, combined, focusedIndex, query, selectSuggestion, selectRecent, setShowDropdown])
 
-  const startVoice = useCallback(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-    if (!SpeechRecognition) {
-      console.warn('[SearchBar] Voice not supported')
-      return
-    }
-
-    if (listening && recognitionRef.current) {
-      recognitionRef.current.stop()
-      setListening(false)
-      return
-    }
-
-    const recog = new SpeechRecognition()
-    recog.lang = lang === 'hi' ? 'hi-IN' : lang === 'te' ? 'te-IN' : 'en-IN'
-    recog.continuous = false
-    recog.interimResults = false
-
-    recog.onstart = () => setListening(true)
-    recog.onend = () => setListening(false)
-    recog.onerror = () => setListening(false)
-
-    recog.onresult = (event) => {
-      const transcript = event.results[0][0].transcript
-      setQuery(transcript)
-    }
-
-    recognitionRef.current = recog
-    recog.start()
-  }, [listening, setQuery, lang])
-
   return (
     <div className="relative flex-1 min-w-0" ref={dropdownRef}>
       <div className="relative">
@@ -134,25 +101,12 @@ export default function SearchBar({
             }
           }}
           placeholder={placeholder || 'Search commodity, market or district...'}
-          className="w-full pl-9 pr-20 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+          className="w-full pl-9 pr-12 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
         />
         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
           {error && (
             <button onClick={retry} title={t?.retryTooltip || 'Retry'} className="p-1.5 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all">
               <Loader2 className="w-3.5 h-3.5" />
-            </button>
-          )}
-          {typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition) && (
-            <button
-              onClick={startVoice}
-              title={listening ? (t?.stopListeningTooltip || 'Stop listening') : (t?.voiceSearchTooltip || 'Voice search')}
-              className={`p-1.5 rounded-lg transition-all ${
-                listening
-                  ? 'text-red-500 bg-red-50 dark:bg-red-900/20 animate-pulse'
-                  : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
-              }`}
-            >
-              {listening ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
             </button>
           )}
           {query && (
