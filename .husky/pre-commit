@@ -1,0 +1,1 @@
+echo "🌾 Running quality checks before commit..." && npm run lint && npm run test
