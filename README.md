@@ -1,70 +1,116 @@
-# Mandi Agri-Tech 🌾
+# Agri-Tech Dashboard — contributor guide 🌾
 
-A modern, AI-powered dashboard for tracking Indian Agriculture Market (Mandi) prices in real-time. This application provides farmers, traders, and consumers with data-driven insights, beautiful visualizations, and an intelligent multilingual AI assistant.
+This repository is a React + TypeScript dashboard for exploring **agricultural commodity prices** published by India’s open data portal. The project is optimized for speed, reliability, and ease of use, following a "Minimal & Clean" philosophy.
 
-## ✨ Features
+---
 
-- **Real-time Price Tracking**: Fetches the latest commodity prices from government APIs.
-- **AI Assistant ("Kisan Sahayak")**: 
-  - Powered by **Groq (Llama 3.3)** or **Gemini 1.5**.
-  - Context-aware: Answers questions based on the specific market data currently on your screen.
-  - Multilingual: Supports English, Hindi, and Telugu.
-- **Voice-to-Voice Interaction**:
-  - Hands-free searching and querying.
-  - Bot reads responses aloud using Text-to-Speech (TTS).
-- **Interactive Dashboards**:
-  - Comparative charts using Recharts.
-  - State and District level filtering.
-  - High/Low price highlights and trend analysis.
-- **Robust API Handling**: Built-in request queuing and rate-limiting (429) protection.
+## What the dashboard does
 
-## 🚀 Tech Stack
+- Pulls commodity price rows from the public **Price Monitoring Division** dataset behind [data.gov.in](https://data.gov.in).
+- Surfaces KPIs, interactive charts (Recharts), and searchable market tables.
+- Supports multi-lingual access (English, Hindi, Telugu) to serve diverse regional needs.
+- Persists user preferences and filters to `localStorage` for a seamless experience across sessions.
 
-- **Frontend**: React 19, Vite, TailwindCSS
-- **State Management**: React Hooks (Custom hooks for data and search)
-- **AI**: Groq API / Google Gemini API
-- **Charts**: Recharts
-- **Icons**: Lucide React
-- **HTTP Client**: Axios with custom request queuing
+---
 
-## 🛠️ Setup Instructions
+## [Rationale] Why the Vite dev proxy exists
 
-### 1. Prerequisites
-- Node.js (v18+)
-- An API key from [data.gov.in](https://data.gov.in/)
-- An AI API key (either [Groq](https://console.groq.com/) or [Google AI Studio](https://aistudio.google.com/))
+Browsers cannot safely call third-party APIs that lack proper CORS headers or require secure handling of parameters. During `npm run dev`, Vite uses a **proxy configuration** (`vite.config.ts`) that forwards requests from `/api` to `https://api.data.gov.in`.
 
-### 2. Clone and Install
+This allows the application to use relative paths like `/api/resource/...` in development, avoiding CORS errors and keeping the code clean. Production builds expect an equivalent reverse proxy or a direct connection to a reachable HTTPS endpoint.
+
+---
+
+## Tech stack
+
+| Area           | Choice                                                   |
+| :------------- | :------------------------------------------------------- |
+| **UI**         | React 19, TypeScript, Vite                               |
+| **Data layer** | TanStack Query (fetch + cache), Axios                    |
+| **Charts**     | Recharts                                                 |
+| **i18n**       | i18next + react-i18next with resources under `src/i18n/` |
+| **Quality**    | Vitest, ESLint, Prettier, Knip                           |
+
+---
+
+## Local development
+
+### Requirements
+
+- Node 20+ (matches modern CI standards)
+- A valid API key for live data from [data.gov.in](https://data.gov.in) (optional, fallback data is provided)
+
+### Install
+
 ```bash
-git clone <repository-url>
-cd agri-tech
 npm install
 ```
 
-### 3. Environment Configuration
-Create a `.env` file in the root directory (use `.env.example` as a template):
-```env
-VITE_API_BASE=/api/resource/9ef84268-d588-465a-a308-a864a43d0070
-VITE_API_KEY=your_mandi_api_key_here
+### Run the dev server
 
-# AI Configuration (The app prefers Groq if both are provided)
-VITE_XAI_API_KEY=your_groq_key_here
-VITE_GEMINI_API_KEY=your_gemini_key_here
-```
-
-### 4. Run Development Server
 ```bash
 npm run dev
 ```
 
-## 🎙️ Using the Assistant
-- Open the chatbot in the bottom-right corner.
-- Click the **Microphone** icon in the header to start voice input.
-- Speak in English, Hindi, or Telugu.
-- The bot will process your request and **speak its response** back to you.
+### Build & Preview
 
-## 🛡️ API Safety
-The application includes a centralized `apiClient.js` that manages a global request queue. This ensures that the app never exceeds the rate limits of public APIs, automatically handling 429 errors with exponential backoff and request throttling.
+```bash
+npm run build
+npm run preview
+```
 
-## 📄 License
-MIT
+---
+
+## Quality & DX commands
+
+| Command                 | Purpose                                            |
+| :---------------------- | :------------------------------------------------- |
+| **`npm run lint`**      | Run ESLint check                                   |
+| **`npm run format`**    | Auto-format with Prettier                          |
+| **`npm run typecheck`** | Run TypeScript type checking (`tsc --noEmit`)      |
+| **`npm run deadcode`**  | Scan for unused exports and dependencies with Knip |
+| **`npm test`**          | Run interactive Vitest suite                       |
+| **`npm run test:run`**  | Run Vitest once (CI mode)                          |
+| **`npm run coverage`**  | Run tests with coverage reporting                  |
+
+---
+
+## Architecture (where to look)
+
+| Concern            | Location                                         |
+| :----------------- | :----------------------------------------------- |
+| **Main App Logic** | `src/App.tsx`                                    |
+| **API Client**     | `src/services/apiClient.ts`                      |
+| **Mandi Services** | `src/services/mandiService.ts`                   |
+| **Custom Hooks**   | `src/hooks/` (Data fetching, search, voice)      |
+| **UI Components**  | `src/components/` (Charts, Tables, Filters, Bot) |
+| **Localization**   | `src/i18n/`                                      |
+| **Root Mount**     | `src/main.tsx`                                   |
+
+---
+
+## Testing strategy
+
+1. **Unit tests** — Pure helpers and logic (e.g., `src/utils/helpers.test.ts`).
+2. **Component tests** — Visual and behavioral verification for UI widgets.
+3. **Hook tests** — Logic verification for complex data hooks.
+
+We strive for high coverage to ensure data accuracy—critical for agricultural price monitoring.
+
+---
+
+## Localization
+
+- **Supported Languages:** English (`en`), Hindi (`hi`), Telugu (`te`).
+- **Configuration:** Managed in `src/i18n/config.ts`.
+
+### Adding a locale
+
+1. Copy `src/i18n/en.ts` to `src/i18n/<lang>.ts` and translate.
+2. Register the new language in `src/i18n/config.ts`.
+
+---
+
+## [Attribution] License / data attribution
+
+Dataset usage is subject to the terms of **data.gov.in**. This project is an independent client; please respect the API rate limits and terms of service provided by the Open Government Data (OGD) Platform India.
