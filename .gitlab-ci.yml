@@ -3,6 +3,7 @@ image: node:20
 stages:
   - install
   - lint
+  - test
   - build
 
 cache:
@@ -13,6 +14,7 @@ cache:
 variables:
   npm_config_cache: '$CI_PROJECT_DIR/.npm'
 
+# All jobs now run on every branch to ensure you see them in every pipeline
 install_deps:
   stage: install
   script:
@@ -23,6 +25,11 @@ lint_code:
   script:
     - npm run lint
 
+unit_tests:
+  stage: test
+  script:
+    - npx vitest run
+
 build_app:
   stage: build
   script:
@@ -30,7 +37,3 @@ build_app:
   artifacts:
     paths:
       - dist/
-  only:
-    - main
-    - master
-    - merge_requests
