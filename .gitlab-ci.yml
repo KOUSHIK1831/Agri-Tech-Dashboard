@@ -1,0 +1,36 @@
+image: node:20
+
+stages:
+  - install
+  - lint
+  - build
+
+cache:
+  paths:
+    - .npm/
+    - node_modules/
+
+variables:
+  npm_config_cache: '$CI_PROJECT_DIR/.npm'
+
+install_deps:
+  stage: install
+  script:
+    - npm ci
+
+lint_code:
+  stage: lint
+  script:
+    - npm run lint
+
+build_app:
+  stage: build
+  script:
+    - npm run build
+  artifacts:
+    paths:
+      - dist/
+  only:
+    - main
+    - master
+    - merge_requests
