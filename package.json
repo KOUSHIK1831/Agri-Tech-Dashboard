@@ -7,7 +7,12 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
+    "typecheck": "tsc --noEmit",
     "test": "vitest",
+    "test:run": "vitest run",
+    "coverage": "vitest run --coverage",
+    "deadcode": "knip",
     "preview": "vite preview",
     "prepare": "husky"
   },

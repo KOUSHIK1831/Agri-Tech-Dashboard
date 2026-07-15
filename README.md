@@ -10,6 +10,10 @@ This repository is a React + TypeScript dashboard for exploring **agricultural c
 - Surfaces KPIs, interactive charts (Recharts), and searchable market tables.
 - Supports multi-lingual access (English, Hindi, Telugu) to serve diverse regional needs.
 - Persists user preferences and filters to `localStorage` for a seamless experience across sessions.
+- **AI Bot Assistant** — Ask natural-language questions about market prices (powered by Groq/XAI or Gemini).
+- **Voice Search** — Search commodities by voice using the Web Speech API (supports EN, HI, TE).
+- **Dark mode** — Toggle between light and dark themes.
+- **View toggle** — Switch between card grid and data table views.
 
 ---
 
@@ -58,6 +62,19 @@ npm run dev
 npm run build
 npm run preview
 ```
+
+### Environment Variables
+
+Copy `.env.example` to `.env` and configure the following:
+
+| Variable | Required | Description |
+| :------- | :------- | :---------- |
+| `VITE_API_BASE` | Yes | API resource path on data.gov.in |
+| `VITE_API_KEY` | Yes (for live data) | Your API key from [data.gov.in](https://data.gov.in) |
+| `VITE_XAI_API_KEY` | No | API key for Grok/XAI bot assistant (preferred over Gemini) |
+| `VITE_GEMINI_API_KEY` | No | API key for Gemini bot assistant (fallback if Grok not set) |
+
+If no API key is provided, the app falls back to bundled sample data.
 
 ---
 
@@ -108,6 +125,12 @@ We strive for high coverage to ensure data accuracy—critical for agricultural 
 
 1. Copy `src/i18n/en.ts` to `src/i18n/<lang>.ts` and translate.
 2. Register the new language in `src/i18n/config.ts`.
+
+---
+
+## Git hooks
+
+[Husky](https://typicode.github.io/husky/) runs linting and tests on every commit via `.husky/pre-commit`. To bypass hooks temporarily, use `git commit --no-verify`.
 
 ---
 
