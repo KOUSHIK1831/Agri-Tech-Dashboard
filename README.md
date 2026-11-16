@@ -78,6 +78,48 @@ In local development, the Vite configuration proxies `/api` requests to `https:/
 
 React 19, TypeScript, Vite 8, TanStack Query, TanStack Table, Recharts, Axios, Tailwind CSS, i18next, Vitest, Testing Library, ESLint, and Prettier.
 
+## Market data behavior
+
+The primary data client requests commodity-price records from
+`data.gov.in` through a queued Axios client. Requests can filter by
+**state, district, and commodity**; the service also removes duplicate
+search results. The query layer caches responses with TanStack Query.
+
+With no state selected, `useCropData` requests up to 300 records each
+for **Telangana** and **Andhra Pradesh**. It may add bundled fallback
+records where either state has fewer than ten results. As a result,
+a dashboard view can contain a mixture of retrieved and sample data.
+
+> [!IMPORTANT]
+> Do not use the displayed records as authoritative live trading
+> quotations without verifying their source, update date, and whether
+> fallback data was inserted.
+
+## Using voice search and the assistant
+
+Voice input uses the browser's SpeechRecognition API (or its
+`webkitSpeechRecognition` equivalent), with `en-IN`, `hi-IN`, and
+`te-IN` language settings. Availability and microphone permission vary
+by browser and device.
+
+**Kisan Sahayak** summarizes the currently supplied market records and
+sends that context with a question to an external language-model
+endpoint. In the current service, keys beginning with `gsk_` select
+Groq; other `VITE_XAI_API_KEY` values select xAI. This feature
+requires compatible provider access and should be routed through a
+server-side service before public deployment.
+
+## Troubleshooting
+
+| Issue | Suggested action |
+| --- | --- |
+| Prices appear old or synthetic | Inspect whether the fallback dataset was used |
+| API request fails or receives 429 | Review credentials, data.gov.in availability, and rate limits |
+| Voice input is unavailable | Try a browser with SpeechRecognition support and microphone permission |
+| Assistant cannot connect | Check provider access and browser CORS restrictions |
+| Production API calls fail | Provide a production reverse proxy; Vite's dev proxy runs only locally |
+| A key appears in browser assets | Rotate it and move secret-bearing calls to a backend |
+
 ## Development
 
 ```bash
