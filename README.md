@@ -1,139 +1,104 @@
-# Agri-Tech Dashboard — contributor guide 🌾
+<div align="center">
 
-This repository is a React + TypeScript dashboard for exploring **agricultural commodity prices** published by India’s open data portal. The project is optimized for speed, reliability, and ease of use, following a "Minimal & Clean" philosophy.
+<img src="public/favicon.svg" alt="Agri-Tech Dashboard icon" width="76" />
 
----
+# Agri-Tech Dashboard
 
-## What the dashboard does
+**Explore Indian agricultural market prices with multilingual search, visualizations, voice input, and an optional AI assistant.**
 
-- Pulls commodity price rows from the public **Price Monitoring Division** dataset behind [data.gov.in](https://data.gov.in).
-- Surfaces KPIs, interactive charts (Recharts), and searchable market tables.
-- Supports multi-lingual access (English, Hindi, Telugu) to serve diverse regional needs.
-- Persists user preferences and filters to `localStorage` for a seamless experience across sessions.
-- **AI Bot Assistant** — Ask natural-language questions about market prices (powered by Groq/XAI or Gemini).
-- **Voice Search** — Search commodities by voice using the Web Speech API (supports EN, HI, TE).
-- **Dark mode** — Toggle between light and dark themes.
-- **View toggle** — Switch between card grid and data table views.
+[![React](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
 
----
+[Features](#features) · [Quick start](#quick-start) · [Architecture](#architecture) · [Development](#development)
 
-## [Rationale] Why the Vite dev proxy exists
+</div>
 
-Browsers cannot safely call third-party APIs that lack proper CORS headers or require secure handling of parameters. During `npm run dev`, Vite uses a **proxy configuration** (`vite.config.ts`) that forwards requests from `/api` to `https://api.data.gov.in`.
+Agri-Tech Dashboard is a React application for exploring commodity-price records from India's [Open Government Data platform](https://data.gov.in). It offers filterable market views, charts, multilingual UI, and a conversational assistant for interpreting the displayed data.
 
-This allows the application to use relative paths like `/api/resource/...` in development, avoiding CORS errors and keeping the code clean. Production builds expect an equivalent reverse proxy or a direct connection to a reachable HTTPS endpoint.
+## Features
 
----
+- **Market dashboard:** Browse commodity prices with summary cards, tables, charts, and filters.
+- **Search:** Explore commodities, markets, states, and districts.
+- **Localization:** English, Hindi, and Telugu.
+- **Voice search:** Browser Web Speech API integration where supported.
+- **Kisan Sahayak:** Optional Groq or xAI-powered assistant that receives summarized market records as context.
+- **Resilient viewing:** Bundled fallback data when the live data source is unavailable.
 
-## Tech stack
+> [!NOTE]
+> Live prices depend on data.gov.in availability, credentials, and publishing cadence. Bundled fallback records are for demonstration and should not be interpreted as current market quotations.
 
-| Area           | Choice                                                   |
-| :------------- | :------------------------------------------------------- |
-| **UI**         | React 19, TypeScript, Vite                               |
-| **Data layer** | TanStack Query (fetch + cache), Axios                    |
-| **Charts**     | Recharts                                                 |
-| **i18n**       | i18next + react-i18next with resources under `src/i18n/` |
-| **Quality**    | Vitest, ESLint, Prettier, Knip                           |
+## Quick start
 
----
-
-## Local development
-
-### Requirements
-
-- Node 20+ (matches modern CI standards)
-- A valid API key for live data from [data.gov.in](https://data.gov.in) (optional, fallback data is provided)
-
-### Install
+**Requirements:** Node.js, npm, and (optionally) a [data.gov.in API key](https://data.gov.in).
 
 ```bash
+git clone https://github.com/KOUSHIK1831/Agri-Tech-Dashboard.git
+cd Agri-Tech-Dashboard
 npm install
-```
-
-### Run the dev server
-
-```bash
+cp .env.example .env
 npm run dev
 ```
 
-### Build & Preview
+Open [http://localhost:5173](http://localhost:5173). The app can render sample data without an external API key.
 
-```bash
-npm run build
-npm run preview
+### Environment variables
+
+| Variable | Purpose |
+| --- | --- |
+| `VITE_API_BASE` | data.gov.in resource path (the example uses `/api/resource/...`) |
+| `VITE_API_KEY` | Optional credential for retrieving live data |
+| `VITE_XAI_API_KEY` | Optional Groq key (prefix `gsk_`) or xAI key for the assistant |
+| `VITE_GEMINI_API_KEY` | Present in the example configuration; not currently used by `aiService.ts` |
+
+> [!WARNING]
+> Variables prefixed with `VITE_` are exposed to the browser bundle. **Do not deploy private AI provider keys in frontend environment variables.** Move authenticated AI requests behind a secure server-side proxy before publishing a production deployment.
+
+## Architecture
+
+```text
+React UI / filters / charts
+           |
+           +--> useCropData / useSearch
+           |         |
+           |         +--> mandiService --> queued API client
+           |                                  |
+           |                               data.gov.in
+           |         |
+           |         +--> fallback market records
+           |
+           +--> voice search (Web Speech API)
+           |
+           +--> Kisan Sahayak (optional external LLM)
 ```
 
-### Environment Variables
+In local development, the Vite configuration proxies `/api` requests to `https://api.data.gov.in`. A production host needs equivalent routing or an accessible server-side data gateway; the development proxy is not automatically deployed.
 
-Copy `.env.example` to `.env` and configure the following:
+## Tech stack
 
-| Variable | Required | Description |
-| :------- | :------- | :---------- |
-| `VITE_API_BASE` | Yes | API resource path on data.gov.in |
-| `VITE_API_KEY` | Yes (for live data) | Your API key from [data.gov.in](https://data.gov.in) |
-| `VITE_XAI_API_KEY` | No | API key for Grok/XAI bot assistant (preferred over Gemini) |
-| `VITE_GEMINI_API_KEY` | No | API key for Gemini bot assistant (fallback if Grok not set) |
+React 19, TypeScript, Vite 8, TanStack Query, TanStack Table, Recharts, Axios, Tailwind CSS, i18next, Vitest, Testing Library, ESLint, and Prettier.
 
-If no API key is provided, the app falls back to bundled sample data.
+## Development
 
----
+```bash
+npm run dev         # Start Vite
+npm run build       # Type-check and create production build
+npm run preview     # Preview build
+npm run lint        # ESLint
+npm run typecheck   # TypeScript checks
+npm run test:run    # One-off test suite
+npm run coverage    # Coverage
+npm run deadcode    # Unused-code analysis
+```
 
-## Quality & DX commands
+### Code map
 
-| Command                 | Purpose                                            |
-| :---------------------- | :------------------------------------------------- |
-| **`npm run lint`**      | Run ESLint check                                   |
-| **`npm run format`**    | Auto-format with Prettier                          |
-| **`npm run typecheck`** | Run TypeScript type checking (`tsc --noEmit`)      |
-| **`npm run deadcode`**  | Scan for unused exports and dependencies with Knip |
-| **`npm test`**          | Run interactive Vitest suite                       |
-| **`npm run test:run`**  | Run Vitest once (CI mode)                          |
-| **`npm run coverage`**  | Run tests with coverage reporting                  |
+| Directory | Responsibility |
+| --- | --- |
+| `src/components/` | Market cards, charts, filters, and chatbot UI |
+| `src/services/` | Data.gov.in requests, query queue, and AI integration |
+| `src/hooks/` | Search, market data, and browser voice features |
+| `src/i18n/` | English, Hindi, Telugu resources |
+| `src/data/fallback.ts` | Offline/sample records |
 
----
-
-## Architecture (where to look)
-
-| Concern            | Location                                         |
-| :----------------- | :----------------------------------------------- |
-| **Main App Logic** | `src/App.tsx`                                    |
-| **API Client**     | `src/services/apiClient.ts`                      |
-| **Mandi Services** | `src/services/mandiService.ts`                   |
-| **Custom Hooks**   | `src/hooks/` (Data fetching, search, voice)      |
-| **UI Components**  | `src/components/` (Charts, Tables, Filters, Bot) |
-| **Localization**   | `src/i18n/`                                      |
-| **Root Mount**     | `src/main.tsx`                                   |
-
----
-
-## Testing strategy
-
-1. **Unit tests** — Pure helpers and logic (e.g., `src/utils/helpers.test.ts`).
-2. **Component tests** — Visual and behavioral verification for UI widgets.
-3. **Hook tests** — Logic verification for complex data hooks.
-
-We strive for high coverage to ensure data accuracy—critical for agricultural price monitoring.
-
----
-
-## Localization
-
-- **Supported Languages:** English (`en`), Hindi (`hi`), Telugu (`te`).
-- **Configuration:** Managed in `src/i18n/config.ts`.
-
-### Adding a locale
-
-1. Copy `src/i18n/en.ts` to `src/i18n/<lang>.ts` and translate.
-2. Register the new language in `src/i18n/config.ts`.
-
----
-
-## Git hooks
-
-[Husky](https://typicode.github.io/husky/) runs linting and tests on every commit via `.husky/pre-commit`. To bypass hooks temporarily, use `git commit --no-verify`.
-
----
-
-## [Attribution] License / data attribution
-
-Dataset usage is subject to the terms of **data.gov.in**. This project is an independent client; please respect the API rate limits and terms of service provided by the Open Government Data (OGD) Platform India.
+The project uses [Open Government Data](https://data.gov.in) as an external data source; review its API terms and rate limits before deploying large-scale usage.
